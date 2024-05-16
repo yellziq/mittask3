@@ -1,72 +1,83 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <vector>
-#include <algorithm>
+#include <string>
+#include <sstream>
 using namespace std;
-
-struct Employee {//создаем структоуру с данными
-    string фамилия;
-    string должность;
-    string дата_рождения;
-    int стаж_работы;
-    int зарплата;
+struct Employee {
+    string surname;
+    string position;
+    string birthDate;
+    int experience;
+    int salary;
 };
 
-void quicksort(vector<Employee>& arr, int L, int R) {//алгоритм быстрой сортировки. опорный элемент- зарплата сотрудника
-    int i = L;
-    int j = R;
-    int pivot = arr[(L + R) / 2].зарплата; // Выбираем опорный элемент
-
-    while (i <= j) {
-        while (arr[i].зарплата < pivot) {
-            i++;
+void merge(vector<Employee>& arr, vector<Employee>& left, vector<Employee>& right, string key1, string key2) {
+    size_t i = 0, j = 0, k = 0;
+    while (i < left.size() && j < right.size()) {
+        if (left[i].salary < right[j].salary || (left[i].salary == right[j].salary && left[i].birthDate < right[j].birthDate)) {
+            arr[k++] = left[i++];
         }
-        while (arr[j].зарплата > pivot) {
-            j--;
-        }
-        if (i <= j) {
-            swap(arr[i], arr[j]);
-            i++;
-            j--;
+        else {
+            arr[k++] = right[j++];
         }
     }
-
-    if (L < j) {
-        quicksort(arr, L, j); // Сортируем левый подмассив
+    while (i < left.size()) {
+        arr[k++] = left[i++];
     }
-    if (i < R) {
-        quicksort(arr, i, R); // Сортируем правый подмассив
+    while (j < right.size()) {
+        arr[k++] = right[j++];
     }
 }
 
+void mergeSort(vector<Employee>& arr, string key1, string key2) {
+    if (arr.size() <= 1) {
+        return;
+    }
+    size_t mid = arr.size() / 2;
+    vector<Employee> left(arr.begin(), arr.begin() + mid);
+    vector<Employee> right(arr.begin() + mid, arr.end());
+    mergeSort(left, key1, key2);
+    mergeSort(right, key1, key2);
+    merge(arr, left, right, key1, key2);
+}
+
 int main() {
-    ifstream input_file("данные_о_сотрудниках.txt");//открываем файлы ввода и вывода
-    ofstream output_file("отсортированные_данные.txt");
-
-    vector<Employee> employees;//информация добавляется в вектор структуры
-    string line;
-
-    while (getline(input_file, line)) {
-        istringstream iss(line);
-        Employee employee;
-        getline(iss, employee.фамилия, ',');
-        getline(iss, employee.должность, ',');
-        getline(iss, employee.дата_рождения, ',');
-        iss >> employee.стаж_работы;
-        iss.ignore(); // Пропускаем запятую
-        iss >> employee.зарплата;
-        employees.push_back(employee);
+    vector<Employee> employees;
+    ifstream inputFile("employees.txt");
+    if (inputFile.is_open()) {
+        std::string line;
+        while (getline(inputFile, line)) {
+            stringstream ss(line);
+            Employee emp;
+            getline(ss, emp.surname, ',');
+            getline(ss, emp.position, ',');
+            getline(ss, emp.birthDate, ',');
+            ss >> emp.experience;
+            ss.ignore(1);  // Ignore the comma
+            ss >> emp.salary;
+            employees.push_back(emp);
+        }
+        inputFile.close();
+    }
+    else {
+        cerr << "Error: Unable to open input file." << std::endl;
+        return 1;
     }
 
-    quicksort(employees, 0, employees.size() - 1);//вызов функции
+    mergeSort(employees, "salary", "birthDate");
 
-    for (const Employee& employee : employees) {
-        output_file << employee.фамилия << ", " << employee.должность << ", " << employee.дата_рождения << ", " << employee.стаж_работы << ", " << employee.зарплата << "\n";
+    ofstream outputFile("sorted_employees.txt");
+    if (outputFile.is_open()) {
+        for (const auto& emp : employees) {
+            outputFile << emp.surname << ',' << emp.position << ',' << emp.birthDate << ',' << emp.experience << ',' << emp.salary << '\n';
+        }
+        outputFile.close();
     }
-
-    input_file.close();
-    output_file.close();
+    else {
+        cerr << "Error: Unable to open output file." << std::endl;
+        return 1;
+    }
 
     return 0;
 }
