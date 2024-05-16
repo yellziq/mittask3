@@ -1,9 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <string>
 #include <sstream>
+#include <algorithm>
 using namespace std;
+
 struct Employee {
     string surname;
     string position;
@@ -12,41 +13,34 @@ struct Employee {
     int salary;
 };
 
-void merge(vector<Employee>& arr, vector<Employee>& left, vector<Employee>& right, string key1, string key2) {
-    size_t i = 0, j = 0, k = 0;
-    while (i < left.size() && j < right.size()) {
-        if (left[i].salary < right[j].salary || (left[i].salary == right[j].salary && left[i].birthDate < right[j].birthDate)) {
-            arr[k++] = left[i++];
+void oddEvenSort(vector<Employee>& arr, string key) {
+    bool sorted = false;
+    while (!sorted) {
+        sorted = true;
+        for (size_t i = 0; i < arr.size() - 1; i += 2) {
+            if (arr[i].surname > arr[i + 1].surname ||
+                (arr[i].surname == arr[i + 1].surname && arr[i].experience > arr[i + 1].experience) ||
+                (arr[i].surname == arr[i + 1].surname && arr[i].experience == arr[i + 1].experience && arr[i].salary > arr[i + 1].salary)) {
+                std::swap(arr[i], arr[i + 1]);
+                sorted = false;
+            }
         }
-        else {
-            arr[k++] = right[j++];
+        for (size_t i = 1; i < arr.size() - 1; i += 2) {
+            if (arr[i].surname > arr[i + 1].surname ||
+                (arr[i].surname == arr[i + 1].surname && arr[i].experience > arr[i + 1].experience) ||
+                (arr[i].surname == arr[i + 1].surname && arr[i].experience == arr[i + 1].experience && arr[i].salary > arr[i + 1].salary)) {
+                std::swap(arr[i], arr[i + 1]);
+                sorted = false;
+            }
         }
     }
-    while (i < left.size()) {
-        arr[k++] = left[i++];
-    }
-    while (j < right.size()) {
-        arr[k++] = right[j++];
-    }
-}
-
-void mergeSort(vector<Employee>& arr, string key1, string key2) {
-    if (arr.size() <= 1) {
-        return;
-    }
-    size_t mid = arr.size() / 2;
-    vector<Employee> left(arr.begin(), arr.begin() + mid);
-    vector<Employee> right(arr.begin() + mid, arr.end());
-    mergeSort(left, key1, key2);
-    mergeSort(right, key1, key2);
-    merge(arr, left, right, key1, key2);
 }
 
 int main() {
     vector<Employee> employees;
-    ifstream inputFile("employees.txt");
+    ifstream inputFile("данные_о_сотрудниках.txt");
     if (inputFile.is_open()) {
-        std::string line;
+        string line;
         while (getline(inputFile, line)) {
             stringstream ss(line);
             Employee emp;
@@ -65,7 +59,7 @@ int main() {
         return 1;
     }
 
-    mergeSort(employees, "salary", "birthDate");
+    oddEvenSort(employees, "surname");
 
     ofstream outputFile("sorted_employees.txt");
     if (outputFile.is_open()) {
