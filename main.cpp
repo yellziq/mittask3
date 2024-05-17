@@ -5,52 +5,23 @@
 
 using namespace std;
 
-// Функция для сортировки слиянием
-void merge(vector<int>& row, int left, int mid, int right) {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
-
-    vector<int> L(n1), R(n2);
-
-    for (int i = 0; i < n1; i++) {
-        L[i] = row[left + i];
-    }
-    for (int j = 0; j < n2; j++) {
-        R[j] = row[mid + 1 + j];
-    }
-
-    int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2) {
-        if (L[i] <= R[j]) {
-            row[k] = L[i];
-            i++;
+// Функция для сортировки чет-нечет
+void oddEvenSort(vector<int>& row, int n) {
+    bool isSorted = false; // флаг для отслеживания завершения сортировки
+    while (!isSorted) {
+        isSorted = true;
+        for (int i = 1; i <= n - 2; i += 2) {
+            if (row[i] > row[i + 1]) {
+                swap(row[i], row[i + 1]);
+                isSorted = false;
+            }
         }
-        else {
-            row[k] = R[j];
-            j++;
+        for (int i = 0; i <= n - 2; i += 2) {
+            if (row[i] > row[i + 1]) {
+                swap(row[i], row[i + 1]);
+                isSorted = false;
+            }
         }
-        k++;
-    }
-
-    while (i < n1) {
-        row[k] = L[i];
-        i++;
-        k++;
-    }
-    while (j < n2) {
-        row[k] = R[j];
-        j++;
-        k++;
-    }
-}
-
-// Функция для сортировки слиянием
-void mergeSort(vector<int>& row, int left, int right) {
-    if (left < right) {
-        int mid = left + (right - left) / 2;
-        mergeSort(row, left, mid);
-        mergeSort(row, mid + 1, right);
-        merge(row, left, mid, right);
     }
 }
 
@@ -78,15 +49,25 @@ int main() {
 
     inputFile.close();
 
-    for (int i = 3; i < n; i += 3) {
-        // Сортировка каждой третьей строки по убыванию
-        sort(arr[i].rbegin(), arr[i].rend());
+    for (int k = 0; k < n; ++k) {
+        vector<int> diagonal;
+        for (int i = 0; i < n - k; ++i) {
+            diagonal.push_back(arr[i][i + k]);
+        }
+        oddEvenSort(diagonal, diagonal.size()); // Сортировка диагонали с помощью сортировки чет-нечет
+        for (int i = 0; i < n - k; ++i) {
+            arr[i][i + k] = diagonal[i];
+        }
     }
 
-    for (int i = 0; i < n; i++) {
-        if (i % 3 != 0) {
-            // Сортировка остальных строк с использованием сортировки слиянием
-            mergeSort(arr[i], 0, n - 1);
+    for (int k = 1; k < n; ++k) {
+        vector<int> diagonal;
+        for (int i = 0; i < n - k; ++i) {
+            diagonal.push_back(arr[i + k][i]);
+        }
+        oddEvenSort(diagonal, diagonal.size()); // Сортировка диагонали с помощью сортировки чет-нечет
+        for (int i = 0; i < n - k; ++i) {
+            arr[i + k][i] = diagonal[i];
         }
     }
 
