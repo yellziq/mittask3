@@ -5,33 +5,58 @@
 
 using namespace std;
 
-// Функция для быстрой сортировки одного столбца (QuickSort)
-void quickSortColumn(vector<int>& column, int left, int right) {
-    // Реализация алгоритма QuickSort для сортировки одного столбца
-    if (left < right) {
-        int pivot = column[right]; // Выбираем опорный элемент из правого конца
-        int i = left - 1;
+// Функция для сортировки слиянием
+void merge(vector<int>& row, int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
 
-        // Проход по столбцу, разделяя элементы по отношению к опорному элементу
-        for (int j = left; j < right; j++) {
-            if (column[j] <= pivot) {
-                i++;
-                swap(column[i], column[j]);
-            }
+    vector<int> L(n1), R(n2);
+
+    for (int i = 0; i < n1; i++) {
+        L[i] = row[left + i];
+    }
+    for (int j = 0; j < n2; j++) {
+        R[j] = row[mid + 1 + j];
+    }
+
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            row[k] = L[i];
+            i++;
         }
+        else {
+            row[k] = R[j];
+            j++;
+        }
+        k++;
+    }
 
-        swap(column[i + 1], column[right]); // Помещаем опорный элемент в правильную позицию
-        int pivotIndex = i + 1;
+    while (i < n1) {
+        row[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2) {
+        row[k] = R[j];
+        j++;
+        k++;
+    }
+}
 
-        // Рекурсивный вызов для подмассивов слева и справа от опорного элемента
-        quickSortColumn(column, left, pivotIndex - 1);
-        quickSortColumn(column, pivotIndex + 1, right);
+// Функция для сортировки слиянием
+void mergeSort(vector<int>& row, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(row, left, mid);
+        mergeSort(row, mid + 1, right);
+        merge(row, left, mid, right);
     }
 }
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    ifstream inputFile("array.txt");
+    ifstream inputFile("input.txt");
     ofstream outputFile("sorted_array.txt");
 
     if (!inputFile.is_open()) {
@@ -53,18 +78,15 @@ int main() {
 
     inputFile.close();
 
-    // Сортировка каждого столбца независимо от других
-    for (int j = 0; j < n; j++) {
-        vector<int> column(n);
-        // Копирование столбца в отдельный вектор для сортировки
-        for (int i = 0; i < n; i++) {
-            column[i] = arr[i][j];
-        }
-        // Вызов функции сортировки для столбца
-        quickSortColumn(column, 0, n - 1);
-        // Обновление значений столбца в исходном двумерном векторе
-        for (int i = 0; i < n; i++) {
-            arr[i][j] = column[i];
+    for (int i = 3; i < n; i += 3) {
+        // Сортировка каждой третьей строки по убыванию
+        sort(arr[i].rbegin(), arr[i].rend());
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i % 3 != 0) {
+            // Сортировка остальных строк с использованием сортировки слиянием
+            mergeSort(arr[i], 0, n - 1);
         }
     }
 
