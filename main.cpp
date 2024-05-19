@@ -1,130 +1,120 @@
-#include <iostream>
+// Очередь. После всех максимальных элементов вставить последний нечётный элемент.
+
+#include<iostream>
+#include <cstdlib>
 using namespace std;
 
-// создаем структуру очередь
-struct queue
-{
-    int inf;
-    queue* next;
+// Структура для хранения элемента очереди
+struct queue {
+    int inf;        // Значение элемента
+    queue* next;    // Указатель на следующий элемент
 };
 
-// функция добавления элемента x в конец очереди
-void push(queue*& h, queue*& t, int x)
-{
+// Функция добавления элемента в конец очереди
+void push(queue*& h, queue*& t, int x) {
+    // Создаем новый элемент
     queue* r = new queue;
     r->inf = x;
     r->next = NULL;
-    if (!h && !t)
-    {
+
+    // Если очередь пуста, то новый элемент становится первым и последним
+    if (!h && !t) {
         h = t = r;
     }
-    else
-    {
+    // Иначе добавляем новый элемент в конец очереди
+    else {
         t->next = r;
         t = r;
     }
 }
 
-// удаляет первый элемент из очереди и возвращает его значение
-int pop(queue*& h, queue*& t)
-{
+// Функция удаления элемента из начала очереди
+int pop(queue*& h, queue*& t) {
+    // Сохраняем значение удаляемого элемента
     int i = h->inf;
+
+    // Удаляем первый элемент
     queue* r = h;
     h = h->next;
+
+    // Если очередь стала пустой, то сбрасываем указатели на первый и последний элементы
     if (!h)
         t = NULL;
+
+    // Освобождаем память удаленного элемента
     delete r;
+
+    // Возвращаем значение удаленного элемента
     return i;
 }
 
-// пройтись по очереди и найти максимальный элемент
-int findMax(queue* h)
-{
-    int max = 0;
-    queue* temp = h;
-    while (temp)
-    {
-        if (temp->inf > max)
-        {
-            max = temp->inf;
-        }
-        temp = temp->next;
-    }
-    return max;
-}
+// Функция перестановки элементов очереди
+void result(queue*& h, queue*& t) {
+    // Создаем временную очередь
+    queue* h_tmp = NULL, * t_tmp = NULL;
 
-// пройтись по очереди и найти последний четный элемент
-int findLastCh(queue* h)
-{
-    int lastCh = 0;
-    queue* temp = h;
-    while (temp)
-    {
-        if (temp->inf % 2 == 0)
-        {
-            lastCh = temp->inf;
-        }
-        temp = temp->next;
-    }
-    return lastCh;
-}
+    // Переменные для хранения минимального и максимального значений
+    int lo = INT_MAX, max_ = INT_MIN, x;
 
-// пройтись по очереди и после каждого максимального элемента вставить последний четный элемент
-void result(queue*& h, queue*& t)
-{
-    int max = findMax(h);
-    int lastCh = findLastCh(h);
-    queue* newQueue = NULL;
-    queue* newQueueEnd = NULL;
+    // Перемещаем все элементы из исходной очереди во временную
+    while (h && t) {
+        // Получаем следующий элемент
+        x = pop(h, t);
 
-    while (h)
-    {
-        int x = pop(h, t);
-        if (x == max)
-        {
-            push(newQueue, newQueueEnd, x);
-            push(newQueue, newQueueEnd, lastCh);
-        }
-        else
-        {
-            push(newQueue, newQueueEnd, x);
-        }
+        // Если элемент нечетный, то обновляем минимальное значение
+        if (x & 1)
+            lo = x;
+
+        // Если элемент больше максимального, то обновляем максимальное значение
+        if (x > max_)
+            max_ = x;
+
+        // Добавляем элемент во временную очередь
+        push(h_tmp, t_tmp, x);
     }
 
-    h = newQueue;
-    t = newQueueEnd;
+    // Перемещаем элементы из временной очереди обратно в исходную, вставляя последний нечетный элемент после всех максимальных
+    while (h_tmp && t_tmp) {
+        // Получаем следующий элемент
+        x = pop(h_tmp, t_tmp);
+
+        // Добавляем элемент в исходную очередь
+        push(h, t, x);
+
+        // Если элемент равен максимальному, то добавляем в очередь последний нечетный элемент
+        if (x == max_)
+            push(h, t, lo);
+    }
 }
 
-int main()
-{
-    queue* h = NULL; // создание очереди
-    queue* t = NULL;
+int main() {
+    // Создаем очередь
+    queue* h = NULL, * t = NULL;
 
+    // Считываем количество элементов в очереди
     int n, x;
-    cout << "n=";
-    cin >> n;
-    cout << "Input element\n";
-    for (int i = 0; i < n; i++)
-    {
+    cout << "Количество элеметов в заданной очереди n = "; cin >> n;
+
+    // Очищаем экран
+    system("clear");
+
+    // Считываем элементы очереди
+    cout << "Введите элементы очереди:" << endl;
+    for (int i = 0; i < n; i++) {
         cin >> x;
         push(h, t, x);
     }
 
-    cout << "Old queue\n"; // вывод данных
-    queue* temp = h;
-    while (temp)
-    {
-        cout << temp->inf << " ";
-        temp = temp->next;
-    }
+    cout << endl;
 
+    // Переставляем элементы очереди
     result(h, t);
 
-    cout << "\nNew queue\n";
-    while (h)
-    {
+    // Выводим результат
+    cout << "Результат: " << endl;
+    while (h && t)
         cout << pop(h, t) << " ";
-    }
+    cout << endl;
 
     return 0;
 }
