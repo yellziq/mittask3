@@ -1,94 +1,130 @@
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <algorithm>
-
 using namespace std;
 
-// Функция для сортировки чет-нечет
-void oddEvenSort(vector<int>& row, int n) {
-    bool isSorted = false; // флаг для отслеживания завершения сортировки
-    while (!isSorted) {
-        isSorted = true;
-        for (int i = 1; i <= n - 2; i += 2) {
-            if (row[i] > row[i + 1]) {
-                swap(row[i], row[i + 1]);
-                isSorted = false;
-            }
-        }
-        for (int i = 0; i <= n - 2; i += 2) {
-            if (row[i] > row[i + 1]) {
-                swap(row[i], row[i + 1]);
-                isSorted = false;
-            }
-        }
+// создаем структуру очередь
+struct queue
+{
+    int inf;
+    queue* next;
+};
+
+// функция добавления элемента x в конец очереди
+void push(queue*& h, queue*& t, int x)
+{
+    queue* r = new queue;
+    r->inf = x;
+    r->next = NULL;
+    if (!h && !t)
+    {
+        h = t = r;
+    }
+    else
+    {
+        t->next = r;
+        t = r;
     }
 }
 
-int main() {
-    setlocale(LC_ALL, "Russian");
-    ifstream inputFile("input.txt");
-    ofstream outputFile("sorted_array.txt");
+// удаляет первый элемент из очереди и возвращает его значение
+int pop(queue*& h, queue*& t)
+{
+    int i = h->inf;
+    queue* r = h;
+    h = h->next;
+    if (!h)
+        t = NULL;
+    delete r;
+    return i;
+}
 
-    if (!inputFile.is_open()) {
-        cerr << "Ошибка открытия входного файла array.txt" << endl;
-        return 1;
+// пройтись по очереди и найти максимальный элемент
+int findMax(queue* h)
+{
+    int max = 0;
+    queue* temp = h;
+    while (temp)
+    {
+        if (temp->inf > max)
+        {
+            max = temp->inf;
+        }
+        temp = temp->next;
     }
+    return max;
+}
 
-    int n;
-    inputFile >> n;
+// пройтись по очереди и найти последний четный элемент
+int findLastCh(queue* h)
+{
+    int lastCh = 0;
+    queue* temp = h;
+    while (temp)
+    {
+        if (temp->inf % 2 == 0)
+        {
+            lastCh = temp->inf;
+        }
+        temp = temp->next;
+    }
+    return lastCh;
+}
 
-    vector<vector<int>> arr(n, vector<int>(n));
+// пройтись по очереди и после каждого максимального элемента вставить последний четный элемент
+void result(queue*& h, queue*& t)
+{
+    int max = findMax(h);
+    int lastCh = findLastCh(h);
+    queue* newQueue = NULL;
+    queue* newQueueEnd = NULL;
 
-    // Чтение входных данных из файла в двумерный вектор
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            inputFile >> arr[i][j];
+    while (h)
+    {
+        int x = pop(h, t);
+        if (x == max)
+        {
+            push(newQueue, newQueueEnd, x);
+            push(newQueue, newQueueEnd, lastCh);
+        }
+        else
+        {
+            push(newQueue, newQueueEnd, x);
         }
     }
 
-    inputFile.close();
+    h = newQueue;
+    t = newQueueEnd;
+}
 
-    for (int k = 0; k < n; ++k) {
-        vector<int> diagonal;
-        for (int i = 0; i < n - k; ++i) {
-            diagonal.push_back(arr[i][i + k]);
-        }
-        oddEvenSort(diagonal, diagonal.size()); // Сортировка диагонали с помощью сортировки чет-нечет
-        for (int i = 0; i < n - k; ++i) {
-            arr[i][i + k] = diagonal[i];
-        }
+int main()
+{
+    queue* h = NULL; // создание очереди
+    queue* t = NULL;
+
+    int n, x;
+    cout << "n=";
+    cin >> n;
+    cout << "Input element\n";
+    for (int i = 0; i < n; i++)
+    {
+        cin >> x;
+        push(h, t, x);
     }
 
-    for (int k = 1; k < n; ++k) {
-        vector<int> diagonal;
-        for (int i = 0; i < n - k; ++i) {
-            diagonal.push_back(arr[i + k][i]);
-        }
-        oddEvenSort(diagonal, diagonal.size()); // Сортировка диагонали с помощью сортировки чет-нечет
-        for (int i = 0; i < n - k; ++i) {
-            arr[i + k][i] = diagonal[i];
-        }
+    cout << "Old queue\n"; // вывод данных
+    queue* temp = h;
+    while (temp)
+    {
+        cout << temp->inf << " ";
+        temp = temp->next;
     }
 
-    // Запись отсортированного массива в файл
-    if (!outputFile.is_open()) {
-        cerr << "Ошибка открытия выходного файла sorted_array.txt" << endl;
-        return 1;
+    result(h, t);
+
+    cout << "\nNew queue\n";
+    while (h)
+    {
+        cout << pop(h, t) << " ";
     }
-
-    outputFile << n << endl;
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            outputFile << arr[i][j] << " ";
-        }
-        outputFile << endl;
-    }
-
-    outputFile.close();
-
-    cout << "Отсортированный массив успешно записан в файл sorted_array.txt" << endl;
 
     return 0;
 }
