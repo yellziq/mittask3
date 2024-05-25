@@ -1,79 +1,151 @@
-#include <iostream> // Подключение библиотеки для ввода/вывода
-using namespace std; // Использование стандартного пространства имен
+// Подключаем необходимые библиотеки
+#include <iostream>
+#include <cmath>
+#include <queue>
 
+using namespace std;
+
+// Структура для хранения узлов дерева
 struct tree {
-    int inf; // Значение узла
-    tree* left; // Указатель на левого потомка
-    tree* right; // Указатель на правого потомка
-    tree* parent; // Указатель на родителя
+    int inf;        // Данные в узле
+    tree* right;   // Указатель на правый узел
+    tree* left;    // Указатель на левый узел
 };
 
-tree* node(int x) { // Функция для создания нового узла с заданным значением
-    tree* n = new tree; // Выделение памяти под новый узел
-    n->inf = x; // Присвоение значения новому узлу
-    n->left = nullptr; // Инициализация указателя на левого потомка как nullptr
-    n->right = nullptr; // Инициализация указателя на правого потомка как nullptr
-    n->parent = nullptr; // Инициализация указателя на родителя как nullptr
-    return n; // Возвращение указателя на новый узел
+// Функция для создания нового узла дерева
+tree* node(int x) {
+    tree* n = new tree;    // Создаем новый узел
+    n->inf = x;            // Устанавливаем данные в узел
+    n->left = n->right = NULL;  // Инициализируем левого и правого потомков как NULL
+    return n;               // Возвращаем созданный узел
 }
 
-void insert(tree*& tr, int x) { // Функция для вставки элемента в бинарное дерево
-    if (x % 2 != 0) { // Проверка на четность элемента
-        cout << "Нечетный элемент " << x << " не будет вставлен в дерево." << endl; // Вывод сообщения о пропуске нечетного элемента
-        return; // Прерывание функции для нечетного элемента
+// Функция для создания дерева
+void create(tree*& tr, int n) {
+    int x;
+    if (n > 0) {
+        cin >> x;
+        tr = node(x);
+        int nl = n / 2;
+        int nr = n - nl - 1;
+        create(tr->left, nl);
+        create(tr->right, nr);
     }
+}
 
-    tree* n = node(x); // Создание нового узла с заданным значением
-    if (!tr) tr = n; // Если дерево пустое, то новый узел становится корнем
+// Функция для обхода дерева в прямом порядке
+void preorder(tree* tr) {
+    if (tr) {
+        cout << tr->inf << " ";
+        preorder(tr->left);
+        preorder(tr->right);
+    }
+}
+
+// Функция для вычисления высоты левого поддерева
+int lefth(tree* tr) {
+    int k = 0;
+    tree* x = tr;
+    while (x) {
+        k++;
+        x = x->left;
+    }
+    return k - 1;
+}
+
+// Функция для вычисления высоты правого поддерева
+int righth(tree* tr) {
+    int k = 0;
+    tree* x = tr;
+    while (x) {
+        k++;
+        x = x->right;
+    }
+    return k - 1;
+}
+
+// Функция для добавления узла в дерево
+void add(tree*& tr, int x) {
+    tree* n = node(x);
+    tree* y = tr;
+    if (lefth(tr) == righth(tr)) {
+        do {
+            y = y->left;
+        } while (y->left);
+        if (!y->left) y->left = n;
+        else y->right = n;
+    }
     else {
-        tree* y = tr; // Указатель для перемещения по дереву начинается с корня
-        while (y) { // Пока не достигнут конец дерева
-            if (n->inf > y->inf) { // Если значение нового узла больше текущего узла
-                if (y->right)
-                    y = y->right; // Переход к правому потомку
-                else {
-                    n->parent = y;
-                    y->right = n; // Вставка нового узла в правого потомка
-                    break;
-                }
-            }
-            else if (n->inf < y->inf) { // Если значение нового узла меньше текущего узла
-                if (y->left)
-                    y = y->left; // Переход к левому потомку
-                else {
-                    n->parent = y;
-                    y->left = n; // Вставка нового узла в левого потомка
-                    break;
-                }
-            }
+        do {
+            y = y->right;
+        } while (y->right);
+        if (!y->left) y->left = n;
+        else y->right = n;
+    }
+}
+
+// Функция для поиска узла в дереве
+void find(tree* tr, int x, tree*& res) {
+    if (tr) {
+        if (tr->inf == x) {
+            res = tr;
+        }
+        else {
+            find(tr->left, x, res);
+            find(tr->right, x, res);
         }
     }
 }
 
-void inorder(tree* root) { // Функция для обхода дерева в порядке inorder (левый, корень, правый)
-    if (root) {
-        inorder(root->left); // Рекурсивный вызов для левого поддерева
-        cout << root->inf << " "; // Вывод значения текущего узла
-        inorder(root->right); // Рекурсивный вызов для правого поддерева
+// Функция для удаления узла из дерева
+void del_n(tree* tr, int val) {
+    tree* y;
+    find(tr, val, y);
+    if (y) {
+        if (lefth(tr) == 0) tr = NULL;
+        else if (lefth(tr) != righth(tr)) {
+            tree* x = tr->left;
+            do {
+                x = x->left;
+            } while (x->left);
+            y->inf = x->inf;
+            del_n(tr, x->inf);
+        }
+        else {
+            tree* x = tr->right;
+            do {
+                x = x->right;
+            } while (x->right);
+            y->inf = x->inf;
+            del_n(tr, x->inf);
+        }
     }
 }
 
-int main() {
-    setlocale(LC_ALL, "RU");
-    int n, x;
-    cout << "Введите количество элементов: "; // Запрос пользователю на ввод количества элементов
-    cin >> n; // Чтение количества элементов
-
-    tree* tr = nullptr; // Инициализация корня дерева как nullptr
-
-    for (int i = 0; i < n; i++) { // Цикл для ввода элементов и вставки их в дерево
-        cout << i + 1 << ": "; // Вывод номера элемента для ввода
-        cin >> x; // Чтение значения элемента
-        insert(tr, x); // Вставка элемента в дерево
+// Функция для подсчета количества листьев в дереве
+int count_leaf(tree* tr) {
+    int count = 0;
+    if (tr) {
+        if (!tr->left && !tr->right) {
+            count++;
+        }
+        else {
+            count += count_leaf(tr->left);
+            count += count_leaf(tr->right);
+        }
     }
+    return count;
+}
 
-    cout << "Бинарное дерево поиска с четными элементами:" << endl; // Вывод сообщения о выводе дерева
-    inorder(tr); // Обход дерева и вывод элементов
-
+int main() {
+    int n;
+    cout << "Введите количество узлов дерева: ";
+    cin >> n;
+    tree* root = NULL;
+    create(root, n);
+    cout << "Дерево в прямом порядке: ";
+    preorder(root);
+    cout << endl;
+    cout << "Количество листьев: " << count_leaf(root) << endl;
     return 0;
 }
