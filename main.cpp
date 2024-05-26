@@ -93,7 +93,7 @@ void result() // нахождение циклов
         pr[i] = -1;
         used[i] = 0;
     }
-    find_cycles(0); // находим циклы начиная с нуля
+    find_cycles(0); // находим циклы начиная с нул
 
     map<vector<int>, int> CYCLES;
     for (int i = 0; i < cycles_sort.size(); i++)
